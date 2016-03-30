@@ -1,4 +1,4 @@
-# Omniauth::Microsoft::Office365
+# OmniAuth::MicrosoftOffice365
 
 Office365 OAuth2 Strategy for OmniAuth.
 

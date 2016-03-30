@@ -5,11 +5,11 @@ require 'omniauth/microsoft_office365/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "omniauth-microsoft-office365"
-  spec.version       = Omniauth::MicrosoftOffice365::VERSION
+  spec.version       = OmniAuth::MicrosoftOffice365::VERSION
   spec.authors       = ["Marcin Urbański"]
   spec.email         = ["marcin@urbanski.vdl.pl"]
-  spec.summary       = %q{Omniauth provider for Microsoft Office365}
-  spec.description   = %q{Omniauth provider for Microsoft Office365}
+  spec.summary       = %q{OmniAuth provider for Microsoft Office365}
+  spec.description   = %q{OmniAuth provider for Microsoft Office365}
   spec.homepage      = "https://github.com/murbanski/omniauth-microsoft-office365"
   spec.license       = "MIT"
 
