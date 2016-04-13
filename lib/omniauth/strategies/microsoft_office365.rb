@@ -39,6 +39,10 @@ module OmniAuth
       end
 
       private
+      
+      def callback_url
+        options[:redirect_uri] || (full_host + script_name + callback_path)
+      end
 
       def avatar_file
         photo = access_token.get("https://outlook.office.com/api/v2.0/me/photo/$value")
