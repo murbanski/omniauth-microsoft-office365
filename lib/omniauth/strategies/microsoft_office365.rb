@@ -12,19 +12,22 @@ module OmniAuth
       }
 
       option :authorize_params, {
-        scope: "openid email profile https://outlook.office.com/contacts.read",
+        scope: "openid User.Read Contacts.Read",
       }
 
-      uid { raw_info["Id"] }
+      uid { raw_info["id"] }
 
       info do
         {
-          email:        raw_info["EmailAddress"],
-          display_name: raw_info["DisplayName"],
-          first_name:   first_last_from_display_name(raw_info["DisplayName"])[0],
-          last_name:    first_last_from_display_name(raw_info["DisplayName"])[1],
-          image:        avatar_file,
-          alias:        raw_info["Alias"]
+          email:           raw_info["mail"] || raw_info["userPrincipalName"],
+          display_name:    raw_info["displayName"],
+          first_name:      raw_info["givenName"],
+          last_name:       raw_info["surname"],
+          job_title:       raw_info["jobTitle"],
+          business_phones: raw_info["businessPhones"],
+          mobile_phone:    raw_info["mobilePhone"],
+          office_phone:    raw_info["officePhone"],
+          image:           avatar_file,
         }
       end
 
@@ -35,26 +38,17 @@ module OmniAuth
       end
 
       def raw_info
-        @raw_info ||= access_token.get("https://outlook.office.com/api/v2.0/me/").parsed
+        @raw_info ||= access_token.get("https://graph.microsoft.com/v1.0/me").parsed
       end
 
       private
-
-      def first_last_from_display_name(display_name)
-        # For display names with last name first like "Del Toro, Benicio"
-        if last_first = display_name.match(/^([^,]+),\s+(\S+)$/)
-          [last_first[2], last_first[1]]
-        else
-          display_name.split(/\s+/, 2)
-        end
-      end
 
       def callback_url
         options[:redirect_uri] || (full_host + script_name + callback_path)
       end
 
       def avatar_file
-        photo = access_token.get("https://outlook.office.com/api/v2.0/me/photo/$value")
+        photo = access_token.get("https://graph.microsoft.com/v1.0/me/photo/$value")
         ext   = photo.content_type.sub("image/", "") # "image/jpeg" => "jpeg"
 
         Tempfile.new(["avatar", ".#{ext}"]).tap do |file|
