@@ -21,8 +21,8 @@ module OmniAuth
         {
           email:        raw_info["EmailAddress"],
           display_name: raw_info["DisplayName"],
-          first_name:   raw_info["DisplayName"].split(", ")[1],
-          last_name:    raw_info["DisplayName"].split(", ")[0],
+          first_name:   first_last_from_display_name(raw_info["DisplayName"])[0],
+          last_name:    first_last_from_display_name(raw_info["DisplayName"])[1],
           image:        avatar_file,
           alias:        raw_info["Alias"]
         }
@@ -39,6 +39,15 @@ module OmniAuth
       end
 
       private
+
+      def first_last_from_display_name(display_name)
+        # For display names with last name first like "Del Toro, Benicio"
+        if last_first = display_name.match(/^([^,]+),\s+(\S+)$/)
+          [last_first[2], last_first[1]]
+        else
+          display_name.split(/\s+/, 2)
+        end
+      end
 
       def callback_url
         options[:redirect_uri] || (full_host + script_name + callback_path)
@@ -57,6 +66,8 @@ module OmniAuth
       rescue ::OAuth2::Error => e
         if e.response.status == 404 # User has no avatar...
           return nil
+        elsif e.code['code'] == 'GetUserPhoto' && e.code['message'].match('not supported')
+          nil
         else
           raise
         end

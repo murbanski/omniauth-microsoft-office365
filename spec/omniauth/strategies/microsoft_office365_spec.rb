@@ -131,6 +131,38 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
       end
     end
 
+    context "when the name is in alternate format" do
+      let(:avatar_response) { instance_double(OAuth2::Response, content_type: "image/jpeg", body: "JPEG_STREAM") }
+      
+      before do
+        expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/photo/$value")
+          .and_return(avatar_response)
+      end
+
+      let(:profile_response) do
+        instance_double(OAuth2::Response, parsed: {
+          "@odata.context" => "https://outlook.office.com/api/v2.0/$metadata#Me",
+          "@odata.id"      => "https://outlook.office.com/api/v2.0/Users('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')",
+          "Id"             => "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+          "EmailAddress"   => "luke.skywalker@example.com",
+          "DisplayName"    => "Luke Skywalker",
+          "Alias"          => "luke.skywalker",
+          "MailboxGuid"    => "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+        })
+      end
+
+      it "returns the parsed first and last name correctly" do
+        expect(strategy.info).to match({
+          alias: "luke.skywalker",
+          display_name: "Luke Skywalker",
+          email: "luke.skywalker@example.com",
+          first_name: "Luke",
+          last_name: "Skywalker",
+          image: Tempfile,
+        })
+      end
+    end
+
     context "when user didn't provide avatar image" do
       let(:avatar_response) { instance_double(OAuth2::Response, "error=" => nil, status: 404, parsed: {}, body: '') }
 
