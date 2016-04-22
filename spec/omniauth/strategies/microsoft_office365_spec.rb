@@ -78,7 +78,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
 
     it "uses correct scope and allows to customize authorization parameters" do
       expect(strategy.authorize_params).to match(
-        "scope" => "openid email profile https://outlook.office.com/contacts.read",
+        "scope" => "openid User.Read Contacts.Read",
         "foo" => "bar",
         "baz" => "zip",
         "state" => /\A\h{48}\z/
@@ -89,18 +89,22 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
   describe "#info" do
     let(:profile_response) do
       instance_double(OAuth2::Response, parsed: {
-        "@odata.context" => "https://outlook.office.com/api/v2.0/$metadata#Me",
-        "@odata.id"      => "https://outlook.office.com/api/v2.0/Users('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')",
-        "Id"             => "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-        "EmailAddress"   => "luke.skywalker@example.com",
-        "DisplayName"    => "Skywalker, Luke",
-        "Alias"          => "luke.skywalker",
-        "MailboxGuid"    => "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+        "@odata.context"  => "https://outlook.office.com/api/v2.0/$metadata#Me",
+        "@odata.id"       => "https://outlook.office.com/api/v2.0/Users('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')",
+        "id"              => "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+        "mail"            => "luke.skywalker@example.com",
+        "displayName"     => "Luke Skywalker",
+        "givenName"       => "Luke",
+        "surname"         => "Skywalker",
+        "jobTitle"        => "Jedi Master",
+        "businessPhones" => ['555-555-5555'],
+        "mobilePhone"    => '555-555-5556',
+        "MailboxGuid"     => "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
       })
     end
 
     before do
-      expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/")
+      expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me")
         .and_return(profile_response)
     end
 
@@ -108,17 +112,20 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
       let(:avatar_response) { instance_double(OAuth2::Response, content_type: "image/jpeg", body: "JPEG_STREAM") }
 
       before do
-        expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/photo/$value")
+        expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
           .and_return(avatar_response)
       end
 
       it "returns a hash containing normalized user data" do
         expect(strategy.info).to match({
-          alias: "luke.skywalker",
-          display_name: "Skywalker, Luke",
+          display_name: "Luke Skywalker",
           email: "luke.skywalker@example.com",
           first_name: "Luke",
           last_name: "Skywalker",
+          job_title: "Jedi Master",
+          business_phones: ['555-555-5555'],
+          mobile_phone: '555-555-5556',
+          office_phone: nil,
           image: Tempfile,
         })
       end
@@ -131,53 +138,24 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
       end
     end
 
-    context "when the name is in alternate format" do
-      let(:avatar_response) { instance_double(OAuth2::Response, content_type: "image/jpeg", body: "JPEG_STREAM") }
-      
-      before do
-        expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/photo/$value")
-          .and_return(avatar_response)
-      end
-
-      let(:profile_response) do
-        instance_double(OAuth2::Response, parsed: {
-          "@odata.context" => "https://outlook.office.com/api/v2.0/$metadata#Me",
-          "@odata.id"      => "https://outlook.office.com/api/v2.0/Users('XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX')",
-          "Id"             => "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX@XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-          "EmailAddress"   => "luke.skywalker@example.com",
-          "DisplayName"    => "Luke Skywalker",
-          "Alias"          => "luke.skywalker",
-          "MailboxGuid"    => "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
-        })
-      end
-
-      it "returns the parsed first and last name correctly" do
-        expect(strategy.info).to match({
-          alias: "luke.skywalker",
-          display_name: "Luke Skywalker",
-          email: "luke.skywalker@example.com",
-          first_name: "Luke",
-          last_name: "Skywalker",
-          image: Tempfile,
-        })
-      end
-    end
-
     context "when user didn't provide avatar image" do
       let(:avatar_response) { instance_double(OAuth2::Response, "error=" => nil, status: 404, parsed: {}, body: '') }
 
       before do
-        expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/photo/$value")
+        expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
           .and_raise(OAuth2::Error, avatar_response)
       end
 
       it "returns a hash containing normalized user data" do
         expect(strategy.info).to match({
-          alias: "luke.skywalker",
-          display_name: "Skywalker, Luke",
+          display_name: "Luke Skywalker",
           email: "luke.skywalker@example.com",
           first_name: "Luke",
           last_name: "Skywalker",
+          job_title: "Jedi Master",
+          business_phones: ['555-555-5555'],
+          mobile_phone: '555-555-5556',
+          office_phone: nil,
           image: nil,
         })
       end
