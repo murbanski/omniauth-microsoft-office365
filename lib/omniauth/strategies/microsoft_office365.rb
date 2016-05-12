@@ -11,9 +11,7 @@ module OmniAuth
         token_url:     "/common/oauth2/v2.0/token"
       }
 
-      option :authorize_params, {
-        scope: "openid email profile https://outlook.office.com/contacts.read",
-      }
+      option :authorize_options, [:scope]
 
       uid { raw_info["Id"] }
 
@@ -51,6 +49,18 @@ module OmniAuth
 
       def callback_url
         options[:redirect_uri] || (full_host + script_name + callback_path)
+      end
+
+      def authorize_params
+        super.tap do |params|
+          %w[display scope auth_type].each do |v|
+            if request.params[v]
+              params[v.to_sym] = request.params[v]
+            end
+          end
+
+          params[:scope] ||= DEFAULT_SCOPE
+        end
       end
 
       def avatar_file
