@@ -133,7 +133,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
 
     context "when the name is in alternate format" do
       let(:avatar_response) { instance_double(OAuth2::Response, content_type: "image/jpeg", body: "JPEG_STREAM") }
-      
+
       before do
         expect(access_token).to receive(:get).with("https://outlook.office.com/api/v2.0/me/photo/$value")
           .and_return(avatar_response)
