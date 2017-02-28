@@ -91,7 +91,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
                                           cookies: {},
                                           env:     {}) }
         it 'returns the supplied value' do
-          expect(strategy.authorize_params[:state]).to eq('foo')
+          expect(strategy.authorize_params['state']).to eq('foo')
         end
       end
 
