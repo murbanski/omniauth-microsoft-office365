@@ -84,6 +84,24 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
         "state" => /\A\h{48}\z/
       )
     end
+
+    describe 'state params' do
+      context 'when supplied with the request' do
+        let(:request) { double("Request", params:  { 'state' => 'foo' },
+                                          cookies: {},
+                                          env:     {}) }
+        it 'returns the supplied value' do
+          expect(strategy.authorize_params['state']).to eq('foo')
+        end
+      end
+
+      context 'when not provided' do
+        it 'returns the auto-generated value' do
+          expect(strategy.authorize_params['state']).to match(/\A\h{48}\z/)
+        end
+      end
+    end
+
   end
 
   describe "#info" do
