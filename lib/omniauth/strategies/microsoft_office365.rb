@@ -13,7 +13,7 @@ module OmniAuth
         token_url:     "/common/oauth2/v2.0/token"
       }
 
-      option :authorize_options, %w[scope hd]
+      option :authorize_options, %w[scope domain_hint]
 
       uid { raw_info["Id"] }
 
@@ -40,7 +40,7 @@ module OmniAuth
 
       def authorize_params
         super.tap do |params|
-          %w[display hd scope auth_type].each do |v|
+          %w[display domain_hint scope auth_type].each do |v|
             if request.params[v]
               params[v.to_sym] = request.params[v]
             end
@@ -86,9 +86,9 @@ module OmniAuth
       end
 
       def verify_hd
-        return access_token.get("https://outlook.office.com/api/v2.0/me/").parsed unless options.hd
+        return access_token.get("https://outlook.office.com/api/v2.0/me/").parsed unless options.domain_hint
 
-        raise CallbackError.new(:invalid_hd, 'Invalid Hosted Domain') unless options.hd == access_token.get("https://outlook.office.com/api/v2.0/me/").parsed["EmailAddress"].split("@")[1] || options.hd == '*'
+        raise CallbackError.new(:invalid_hd, 'Invalid Hosted Domain') unless options.domain_hint == access_token.get("https://outlook.office.com/api/v2.0/me/").parsed["EmailAddress"].split("@")[1] || options.domain_hint == '*'
 
         access_token.get("https://outlook.office.com/api/v2.0/me/").parsed
       end
