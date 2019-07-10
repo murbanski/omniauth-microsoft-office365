@@ -13,7 +13,7 @@ module OmniAuth
         token_url:     "/common/oauth2/v2.0/token"
       }
 
-      option :authorize_options, [:scope]
+      option :authorize_options, %w[scope domain_hint]
 
       uid { raw_info["id"] }
 
@@ -43,7 +43,7 @@ module OmniAuth
 
       def authorize_params
         super.tap do |params|
-          %w[display scope auth_type].each do |v|
+          %w[display domain_hint scope auth_type].each do |v|
             if request.params[v]
               params[v.to_sym] = request.params[v]
             end
