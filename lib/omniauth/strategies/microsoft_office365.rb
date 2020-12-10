@@ -72,6 +72,8 @@ module OmniAuth
       rescue ::OAuth2::Error => e
         if e.response.status == 404 # User has no avatar...
           return nil
+        elsif e.response.status == 403 # Permissions are not allowed or the profile photo is from a local AD
+          nil
         elsif e.code['code'] == 'GetUserPhoto' && e.code['message'].match('not supported')
           nil
         else
