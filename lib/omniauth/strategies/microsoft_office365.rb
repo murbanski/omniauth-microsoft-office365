@@ -1,4 +1,6 @@
-require "omniauth/strategies/oauth2"
+# MODIFIED
+# require "omniauth/strategies/oauth2"
+require 'omniauth-oauth2'
 
 module OmniAuth
   module Strategies
@@ -13,7 +15,9 @@ module OmniAuth
         token_url:     "/common/oauth2/v2.0/token"
       }
 
-      option :authorize_options, %w[scope domain_hint]
+      # MODIFIED
+      #option :authorize_options, %w[scope domain_hint]
+      option :authorize_options, %w[scope domain_hint state redirect_uri]
 
       uid { raw_info["id"] }
 
@@ -43,13 +47,18 @@ module OmniAuth
 
       def authorize_params
         super.tap do |params|
-          %w[display domain_hint scope auth_type].each do |v|
+          # MODIFIED
+          #%w[display domain_hint scope auth_type].each do |v|
+          %w[display domain_hint scope auth_type state redirect_uri].each do |v|
             if request.params[v]
               params[v.to_sym] = request.params[v]
             end
           end
 
           params[:scope] ||= DEFAULT_SCOPE
+
+          # MODIFIED
+          session['omniauth.state'] = params[:state] if params[:state]
         end
       end
 
