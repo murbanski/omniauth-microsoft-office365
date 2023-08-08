@@ -118,6 +118,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
 
       it "returns a hash containing normalized user data" do
         expect(strategy.info).to match({
+          name: "Luke Skywalker",
           display_name: "Luke Skywalker",
           email: "luke.skywalker@example.com",
           first_name: "Luke",
@@ -139,7 +140,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
     end
 
     context "when user didn't provide avatar image" do
-      let(:avatar_response) { instance_double(OAuth2::Response, "error=" => nil, status: 404, parsed: {}, body: '') }
+      let(:avatar_response) { instance_double(OAuth2::Response, status: 404, parsed: {}, body: '') }
 
       before do
         expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
@@ -148,6 +149,7 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
 
       it "returns a hash containing normalized user data" do
         expect(strategy.info).to match({
+          name: "Luke Skywalker",
           display_name: "Luke Skywalker",
           email: "luke.skywalker@example.com",
           first_name: "Luke",

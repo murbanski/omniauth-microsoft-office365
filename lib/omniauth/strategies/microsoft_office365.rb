@@ -20,6 +20,7 @@ module OmniAuth
       info do
         {
           email:           raw_info["mail"] || raw_info["userPrincipalName"],
+          name:            raw_info["displayName"],
           display_name:    raw_info["displayName"],
           first_name:      raw_info["givenName"],
           last_name:       raw_info["surname"],
