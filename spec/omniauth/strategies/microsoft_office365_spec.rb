@@ -160,6 +160,46 @@ RSpec.describe OmniAuth::Strategies::MicrosoftOffice365 do
         })
       end
     end
+
+    context "when the avatar request fails" do
+      let(:avatar_response) do
+        instance_double(OAuth2::Response, status: 500,
+          parsed: { "error" => { "code" => "UnknownError", "message" => "" } }, body: '{"error":{"code":"UnknownError","message":""}}')
+      end
+
+      before do
+        expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
+          .and_raise(OAuth2::Error, avatar_response)
+      end
+
+      it "returns user data without an image" do
+        expect(strategy.info).to include(email: "luke.skywalker@example.com", image: nil)
+      end
+    end
+
+    context "when the avatar request times out" do
+      before do
+        expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
+          .and_raise(Faraday::TimeoutError, "execution expired")
+      end
+
+      it "returns user data without an image" do
+        expect(strategy.info).to include(email: "luke.skywalker@example.com", image: nil)
+      end
+    end
+
+    context "when the avatar request fails without a JSON error body" do
+      let(:avatar_response) { instance_double(OAuth2::Response, status: 503, parsed: nil, body: "Service Unavailable") }
+
+      before do
+        expect(access_token).to receive(:get).with("https://graph.microsoft.com/v1.0/me/photo/$value")
+          .and_raise(OAuth2::Error, avatar_response)
+      end
+
+      it "returns user data without an image" do
+        expect(strategy.info).to include(email: "luke.skywalker@example.com", image: nil)
+      end
+    end
   end
 
 end
