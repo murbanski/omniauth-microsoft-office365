@@ -69,16 +69,10 @@ module OmniAuth
           file.rewind
         end
 
-      rescue ::OAuth2::Error => e
-        if e.response.status == 404 # User has no avatar...
-          return nil
-        elsif e.response.status == 403 # Permissions are not allowed or the profile photo is from a local AD
-          nil
-        elsif e.code['code'] == 'GetUserPhoto' && e.code['message'].match('not supported')
-          nil
-        else
-          raise
-        end
+      rescue ::OAuth2::Error, ::Faraday::Error
+        # The avatar is optional: a missing photo, a mailbox without photo support
+        # or a failing, slow or unreachable Graph/Exchange backend must not break the whole login.
+        nil
       end
 
     end
